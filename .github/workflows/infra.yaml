@@ -1,0 +1,172 @@
+name: Infrastructure
+
+on:
+  pull_request:
+    branches:
+      - stage
+      - main
+    paths:
+      - 'iac/**'
+  push:
+    branches:
+      - stage
+      - main
+    paths:
+      - 'iac/**'
+
+permissions:
+  contents: read
+
+env:
+  TG_VERSION: 0.82.3
+  TF_VERSION: 1.11.4
+
+jobs:
+  validate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Install Terragrunt
+        run: |
+          curl -L \
+            https://github.com/gruntwork-io/terragrunt/releases/download/v${TG_VERSION}/terragrunt_linux_amd64 \
+            -o terragrunt
+          chmod +x terragrunt
+          sudo mv terragrunt /usr/local/bin/
+
+      - name: Terragrunt Format Check
+        run: |
+          cd iac
+          terragrunt hcl fmt --check
+
+      - name: Terragrunt Validate Staging
+        if: github.base_ref == 'stage'
+        run: |
+          cd iac/enviroments/staging
+          terragrunt validate
+
+      - name: Terragrunt Validate Production
+        if: github.base_ref == 'main'
+        run: |
+          cd iac/enviroments/production
+          terragrunt validate
+
+  plan:
+    if: github.event_name == 'pull_request'
+    needs:
+      - validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Install Terragrunt
+        run: |
+          curl -L \
+            https://github.com/gruntwork-io/terragrunt/releases/download/v${TG_VERSION}/terragrunt_linux_amd64 \
+            -o terragrunt
+          chmod +x terragrunt
+          sudo mv terragrunt /usr/local/bin/
+
+      - name: Plan Staging
+        if: github.base_ref == 'stage'
+        run: |
+          cd iac/enviroments/staging
+          terragrunt plan
+
+      - name: Plan Production
+        if: github.base_ref == 'main'
+        run: |
+          cd iac/enviroments/production
+          terragrunt plan
+
+  apply-staging:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/stage'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Install Terragrunt
+        run: |
+          curl -L \
+            https://github.com/gruntwork-io/terragrunt/releases/download/v${TG_VERSION}/terragrunt_linux_amd64 \
+            -o terragrunt
+          chmod +x terragrunt
+          sudo mv terragrunt /usr/local/bin/
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Apply Staging
+        run: |
+          cd iac/enviroments/staging
+          terragrunt apply -auto-approve
+
+  apply-production:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Install Terragrunt
+        run: |
+          curl -L \
+            https://github.com/gruntwork-io/terragrunt/releases/download/v${TG_VERSION}/terragrunt_linux_amd64 \
+            -o terragrunt
+          chmod +x terragrunt
+          sudo mv terragrunt /usr/local/bin/
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Apply Production
+        run: |
+          cd iac/enviroments/production
+          terragrunt apply -auto-approve
