@@ -1,0 +1,16 @@
+.terraform/
+.terragrunt-cache/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+
+.terraform.lock.hcl
+
+.vscode/
+.idea/
+
+*.pem
+*.key
+
+.env

@@ -1,0 +1,70 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gateway-api-crds
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/kubernetes-sigs/gateway-api
+    path: config/crd
+    targetRevision: v1.2.1
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: gateway-api
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: traefik
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://helm.traefik.io/traefik
+    chart: traefik
+    targetRevision: 32.1.1
+    helm:
+      values: |
+        deployment:
+          replicas: 2
+
+        service:
+          type: LoadBalancer
+          annotations:
+            service.beta.kubernetes.io/azure-load-balancer-resource-group: rg-cluster-stg
+
+        providers:
+          kubernetesCRD:
+            enabled: true
+          kubernetesIngress:
+            enabled: false
+          kubernetesGateway:
+            enabled: true
+
+        gateway:
+          enabled: true
+          namespacePolicy: All
+
+        ingressRoute:
+          dashboard:
+            enabled: false
+
+        logs:
+          general:
+            level: INFO
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: traefik
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
