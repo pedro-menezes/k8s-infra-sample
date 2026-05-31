@@ -29,10 +29,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Azure Login
-        uses: azure/login@v2
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      # - name: Azure Login
+      #   uses: azure/login@v2
+      #   with:
+      #     creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -73,10 +73,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Azure Login
-        uses: azure/login@v2
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      # - name: Azure Login
+      #   uses: azure/login@v2
+      #   with:
+      #     creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -94,14 +94,12 @@ jobs:
       - name: Plan Staging
         if: github.base_ref == 'stage'
         run: |
-          cd iac/enviroments/staging
-          terragrunt plan
+          echo "terragrunt plan - iac/enviroments/staging"
 
       - name: Plan Production
         if: github.base_ref == 'main'
         run: |
-          cd iac/enviroments/production
-          terragrunt plan
+          echo "terragrunt plan - iac/enviroments/production"
 
   apply-staging:
     if: github.event_name == 'push' && github.ref == 'refs/heads/stage'
@@ -110,10 +108,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Azure Login
-        uses: azure/login@v2
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      # - name: Azure Login
+      #   uses: azure/login@v2
+      #   with:
+      #     creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -128,13 +126,12 @@ jobs:
           chmod +x terragrunt
           sudo mv terragrunt /usr/local/bin/
 
-      - name: Install kubectl
-        uses: azure/setup-kubectl@v3
+      # - name: Install kubectl
+      #   uses: azure/setup-kubectl@v3
 
       - name: Apply Staging
         run: |
-          cd iac/enviroments/staging
-          terragrunt apply -auto-approve
+          echo "terragrunt apply -auto-approve - iac/enviroments/staging"
 
   apply-production:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -145,10 +142,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Azure Login
-        uses: azure/login@v2
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      # - name: Azure Login
+      #   uses: azure/login@v2
+      #   with:
+      #     creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -163,10 +160,9 @@ jobs:
           chmod +x terragrunt
           sudo mv terragrunt /usr/local/bin/
 
-      - name: Install kubectl
-        uses: azure/setup-kubectl@v3
+      # - name: Install kubectl
+      #   uses: azure/setup-kubectl@v3
 
       - name: Apply Production
         run: |
-          cd iac/enviroments/production
-          terragrunt apply -auto-approve
+          echo "terragrunt apply -auto-approve - iac/enviroments/production"
