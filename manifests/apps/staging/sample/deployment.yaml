@@ -33,7 +33,7 @@ spec:
                     app: sample-app
       containers:
         - name: sample-app
-          image: acrk8sprd.azurecr.io/sample-app:1.0.0
+          image: sample-app:sha-8eb0797
           imagePullPolicy: Always
           ports:
             - containerPort: 80
