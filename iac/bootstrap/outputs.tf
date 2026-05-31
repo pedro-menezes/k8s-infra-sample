@@ -1,6 +1,6 @@
 output "resource_group_name" {
   value       = azurerm_resource_group.tfstate.name
-  description = "Nome do resource group"
+  description = "Nome do resource-group"
 }
 
 output "storage_account_name" {
